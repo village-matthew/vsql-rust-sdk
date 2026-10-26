@@ -4,6 +4,9 @@ INSTALL EXTENSION sdk_coverage;
 SELECT sdk_identity_int(42);
 SELECT sdk_identity_int(-100);
 SELECT sdk_identity_int(NULL);
+--echo # InValue::Int dispatch panic
+--error 3200
+SELECT sdk_identity_int(88);
 
 --echo # InValue::Real dispatch
 SELECT sdk_identity_real(1.5);

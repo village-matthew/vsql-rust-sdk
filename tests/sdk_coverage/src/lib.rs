@@ -14,6 +14,7 @@ use villagesql::{InValue, MaybeParams, Params, Resolved, VdfReturn};
 
 fn sdk_identity_int_impl(args: &[InValue]) -> VdfReturn {
     match args.first() {
+        Some(InValue::Int(v)) if *v == 88 => panic!("sdk_identity_int_impl panic"),
         Some(InValue::Int(v)) => VdfReturn::Int(*v),
         Some(InValue::Null) | None => VdfReturn::null(),
         _ => VdfReturn::error("sdk_identity_int: expected INT"),

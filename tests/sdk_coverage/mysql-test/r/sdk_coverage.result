@@ -9,6 +9,9 @@ sdk_identity_int(-100)
 SELECT sdk_identity_int(NULL);
 sdk_identity_int(NULL)
 NULL
+# InValue::Int dispatch panic
+SELECT sdk_identity_int(88);
+ERROR HY000: VDF error in function 'sdk_identity_int': dispatch_vdf
 # InValue::Real dispatch
 SELECT sdk_identity_real(1.5);
 sdk_identity_real(1.5)

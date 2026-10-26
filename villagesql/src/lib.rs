@@ -87,6 +87,7 @@ use core::ffi::c_void;
 use std::collections::HashMap;
 use std::ffi::c_char;
 use std::marker::PhantomData;
+use std::panic::AssertUnwindSafe;
 use std::sync::{OnceLock, RwLock};
 use villagesql_sys::{
     vef_func_desc_t, vef_postrun_args_t, vef_prerun_args_t, vef_prerun_result_t,
@@ -827,7 +828,18 @@ pub unsafe fn dispatch_vdf(
     result: *mut vef_vdf_result_t,
 ) {
     let in_values = read_in_values(&*args);
-    write_result(f(&in_values), &mut *result);
+
+    let panic_result = std::panic::catch_unwind(
+        AssertUnwindSafe(|| {
+            write_result(f(&in_values), &mut *result);
+    }));
+
+    match panic_result {
+        Ok(_) => (),
+        Err(_) => {
+            write_result(VdfReturn::Error("dispatch_vdf".to_string()),&mut *result);
+        }
+    }
 }
 
 /// Prerun runner: wrap the raw slots and call the author's setup fn.
@@ -861,7 +873,18 @@ pub unsafe fn dispatch_vdf_with_state<T>(
     let args = &*args;
     let state = borrow_state::<T>(args.user_data);
     let in_values = read_in_values(args);
-    write_result(f(state, &in_values), &mut *result);
+
+    let panic_result = std::panic::catch_unwind(
+        AssertUnwindSafe(|| {
+            write_result(f(state, &in_values), &mut *result);
+    }));
+
+    match panic_result {
+        Ok(_) => (),
+        Err(_) => {
+            write_result(VdfReturn::Error("dispatch_vdf_with_stat".to_string()),&mut *result);
+        }
+    }
 }
 
 /// Postrun runner: reclaim the state and drop the state allocated in prerun.
@@ -1541,8 +1564,18 @@ macro_rules! func {
                 args: *mut $crate::sys::vef_vdf_args_t,
                 result: *mut $crate::sys::vef_vdf_result_t,
             ) {
-                $crate::dispatch_vdf_with_state::<$state>($impl_fn, args, result);
+                // let panic_result = std::panic::catch_unwind(|| {
+                    $crate::dispatch_vdf_with_state::<$state>($impl_fn, args, result);
+                // });
+
+                // match panic_result {
+                //     Ok(_) => (),
+                //     Err(panic_payload) => {
+                //         write_result(VdfReturn::Error(panic_payload, result));
+                //     }
+                // }
             }
+
             // prerun trampoline
             unsafe extern "C" fn [< __vsql_prerun_ $impl_fn >](
                 _ctx: *mut $crate::sys::vef_context_t,
