@@ -829,15 +829,14 @@ pub unsafe fn dispatch_vdf(
 ) {
     let in_values = read_in_values(&*args);
 
-    let panic_result = std::panic::catch_unwind(
-        AssertUnwindSafe(|| {
-            write_result(f(&in_values), &mut *result);
+    let panic_result = std::panic::catch_unwind(AssertUnwindSafe(|| {
+        write_result(f(&in_values), &mut *result);
     }));
 
     match panic_result {
         Ok(_) => (),
         Err(_) => {
-            write_result(VdfReturn::Error("dispatch_vdf".to_string()),&mut *result);
+            write_result(VdfReturn::Error("dispatch_vdf".to_string()), &mut *result);
         }
     }
 }
@@ -874,15 +873,17 @@ pub unsafe fn dispatch_vdf_with_state<T>(
     let state = borrow_state::<T>(args.user_data);
     let in_values = read_in_values(args);
 
-    let panic_result = std::panic::catch_unwind(
-        AssertUnwindSafe(|| {
-            write_result(f(state, &in_values), &mut *result);
+    let panic_result = std::panic::catch_unwind(AssertUnwindSafe(|| {
+        write_result(f(state, &in_values), &mut *result);
     }));
 
     match panic_result {
         Ok(_) => (),
         Err(_) => {
-            write_result(VdfReturn::Error("dispatch_vdf_with_stat".to_string()),&mut *result);
+            write_result(
+                VdfReturn::Error("dispatch_vdf_with_stat".to_string()),
+                &mut *result,
+            );
         }
     }
 }
