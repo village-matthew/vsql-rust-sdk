@@ -1084,11 +1084,25 @@ pub unsafe fn dispatch_intrinsic_default(
     result: *mut vef_vdf_result_t,
 ) {
     let result = &mut *result;
-    let ret = match default_fn() {
-        Ok(s) => VdfReturn::String(s),
-        Err(e) => VdfReturn::error(e),
-    };
-    write_result(ret, result);
+
+    let panic_result = std::panic::catch_unwind(AssertUnwindSafe(|| {
+        let ret = match default_fn() {
+            Ok(s) => VdfReturn::String(s),
+            Err(e) => VdfReturn::error(e),
+        };
+
+        write_result(ret, result);
+    }));
+
+    match panic_result {
+        Ok(_) => (),
+        Err(_) => {
+            write_result(
+                VdfReturn::Error("dispatch_vdf_intrinsic_default".to_string()),
+                &mut *result,
+            );
+        }
+    }
 }
 
 /// Copy `bytes` into the server's result buffer `buf` (capacity `max`) and mark

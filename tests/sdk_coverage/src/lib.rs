@@ -14,7 +14,7 @@ use villagesql::{InValue, MaybeParams, Params, Resolved, VdfReturn};
 
 fn sdk_identity_int_impl(args: &[InValue]) -> VdfReturn {
     match args.first() {
-        Some(InValue::Int(v)) if *v == 88 => panic!("sdk_identity_int_impl panic"),
+        Some(InValue::Int(v)) if *v == 86 => panic!("sdk_identity_int_impl panic"),
         Some(InValue::Int(v)) => VdfReturn::Int(*v),
         Some(InValue::Null) | None => VdfReturn::null(),
         _ => VdfReturn::error("sdk_identity_int: expected INT"),
@@ -46,6 +46,7 @@ fn sdk_warn_if_negative_impl(args: &[InValue]) -> VdfReturn {
 
 pub fn counter_encode(s: &str) -> Result<Vec<u8>, String> {
     let n: i64 = s.trim().parse().map_err(|e| format!("counter: {e}"))?;
+    if n == 86 { panic!("counter_encode panic") }
     Ok(n.to_le_bytes().to_vec())
 }
 
@@ -53,24 +54,33 @@ pub fn counter_decode(b: &[u8]) -> Result<String, String> {
     if b.len() < 8 {
         return Err(format!("counter: expected 8 bytes, got {}", b.len()));
     }
-    Ok(i64::from_le_bytes(b[..8].try_into().unwrap()).to_string())
+    let n: i64 = i64::from_le_bytes(b[..8].try_into().unwrap());
+    if n == 8686 { panic!("counter_decode panic") }
+    Ok(n.to_string())
 }
 
 #[must_use]
 pub fn counter_compare(a: &[u8], b: &[u8]) -> std::cmp::Ordering {
     let va = i64::from_le_bytes(a[..8].try_into().unwrap());
     let vb = i64::from_le_bytes(b[..8].try_into().unwrap());
+    if va == 68 { panic!("counter_compare panic") }
     va.cmp(&vb)
 }
 
 #[must_use]
 #[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
 pub fn counter_hash(b: &[u8]) -> usize {
+    let va = i64::from_le_bytes(b[..8].try_into().unwrap());
+    if va == 666 { panic!("counter_hash panic") }
     i64::from_le_bytes(b[..8].try_into().unwrap()) as usize
 }
 
 pub fn counter_default() -> Result<String, String> {
     Ok("0".to_string())
+}
+
+pub fn counter_panic_default() -> Result<String, String> {
+    panic!("counter_panic_default panic");
 }
 
 // ── Type 2: flag (1 byte bool, "true"/"false") ────────────────────────────────
@@ -373,6 +383,16 @@ villagesql::extension! {
             compare: counter_compare,
             hash: counter_hash,
             intrinsic_default_fn: counter_default,
+        ),
+        villagesql::custom_type!(
+            type_name: "counter_panic_default",
+            persisted_length: 8,
+            max_decode_buffer_length: 20,
+            encode: counter_encode,
+            decode: counter_decode,
+            compare: counter_compare,
+            hash: counter_hash,
+            intrinsic_default_fn: counter_panic_default,
         ),
         villagesql::custom_type!(
             type_name: "flag",

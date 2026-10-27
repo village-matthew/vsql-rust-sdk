@@ -1,4 +1,6 @@
 INSTALL EXTENSION sdk_coverage;
+call mtr.add_suppression("VillageSQL.*Invalid value in column.*sdk_coverage");
+call mtr.add_suppression("VillageSQL.*hash VDF.*dispatch_vdf");
 # InValue::Int dispatch
 SELECT sdk_identity_int(42);
 sdk_identity_int(42)
@@ -10,7 +12,7 @@ SELECT sdk_identity_int(NULL);
 sdk_identity_int(NULL)
 NULL
 # InValue::Int dispatch panic
-SELECT sdk_identity_int(88);
+SELECT sdk_identity_int(86);
 ERROR HY000: VDF error in function 'sdk_identity_int': dispatch_vdf
 # InValue::Real dispatch
 SELECT sdk_identity_real(1.5);
@@ -47,6 +49,9 @@ counter::from_string('-7')
 SELECT counter::from_string(NULL);
 counter::from_string(NULL)
 NULL
+# panic from within from_string
+SELECT counter::from_string('86');
+ERROR HY000: VDF error in function 'counter::from_string': dispatch_vdf
 # A bad value from encode is NULL with a warning, not an error
 SELECT counter::from_string('not-a-number');
 counter::from_string('not-a-number')
@@ -62,6 +67,9 @@ counter::compare(counter::from_string('5'), counter::from_string('5'))
 SELECT counter::compare(counter::from_string('9'), counter::from_string('3'));
 counter::compare(counter::from_string('9'), counter::from_string('3'))
 1
+# panic from within counter_compare
+SELECT counter::compare(counter::from_string('68'), counter::from_string('68'));
+ERROR HY000: VDF error in function 'counter::compare': dispatch_vdf
 # Type: flag (bool, "true"/"false")
 SELECT flag::from_string('true');
 flag::from_string('true')
@@ -104,7 +112,26 @@ id	c	f
 2	3	false
 3	10	false
 1	10	true
+# panic from counter_decode on SELECT
+INSERT INTO t1 VALUES (5, '8686', 'true');
+SELECT id, c  FROM t1 WHERE id = 5;
+ERROR HY000: Invalid value in column 'c' of type 'sdk_coverage.counter' at row 1: check server log for details
+# capture counter decode error
+VillageSQL: Invalid value in column 'c' of type 'sdk_coverage.counter' at row 1 (value: \xEE!\x00\x00\x00\x00\x00\x00): dispatch_vdf
+UPDATE t1 SET c = '5' WHERE id =5;
+# panic from counter_hash on SELECT
+INSERT INTO t1 VALUES (6, '666', 'true');
+SELECT sum(id), c FROM t1 GROUP BY c ORDER BY c;
+sum(id)	c
+2	3
+5	5
+4	10
+6	666
+# get copy of hash error
 DROP TABLE t1;
+# panic within counter_panic_default
+CREATE TABLE t_panic (id INT, c counter_panic_default NOT NULL, f flag);
+ERROR HY000: Type 'sdk_coverage.counter_panic_default' failed to initialize: intrinsic_default function failed: dispatch_vdf_intrinsic_default
 # Default values: omitted columns use the registered default
 CREATE TABLE t2 (id INT, c counter, f flag);
 INSERT INTO t2 (id) VALUES (1);

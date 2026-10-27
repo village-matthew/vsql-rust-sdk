@@ -1,12 +1,15 @@
 INSTALL EXTENSION sdk_coverage;
 
+call mtr.add_suppression("VillageSQL.*Invalid value in column.*sdk_coverage");
+call mtr.add_suppression("VillageSQL.*hash VDF.*dispatch_vdf");
+
 --echo # InValue::Int dispatch
 SELECT sdk_identity_int(42);
 SELECT sdk_identity_int(-100);
 SELECT sdk_identity_int(NULL);
 --echo # InValue::Int dispatch panic
 --error 3200
-SELECT sdk_identity_int(88);
+SELECT sdk_identity_int(86);
 
 --echo # InValue::Real dispatch
 SELECT sdk_identity_real(1.5);
@@ -23,11 +26,17 @@ SELECT sdk_warn_if_negative(NULL);
 SELECT counter::from_string('42');
 SELECT counter::from_string('-7');
 SELECT counter::from_string(NULL);
+--echo # panic from within from_string
+--error 3200
+SELECT counter::from_string('86');
 --echo # A bad value from encode is NULL with a warning, not an error
 SELECT counter::from_string('not-a-number');
 SELECT counter::compare(counter::from_string('1'), counter::from_string('2'));
 SELECT counter::compare(counter::from_string('5'), counter::from_string('5'));
 SELECT counter::compare(counter::from_string('9'), counter::from_string('3'));
+--echo # panic from within counter_compare
+--error 3200
+SELECT counter::compare(counter::from_string('68'), counter::from_string('68'));
 
 --echo # Type: flag (bool, "true"/"false")
 SELECT flag::from_string('true');
@@ -48,7 +57,31 @@ INSERT INTO t1 VALUES (4, 'not-a-number', 'true');
 INSERT INTO t1 VALUES (4, '1', 'maybe');
 SELECT id, c, f FROM t1 ORDER BY id;
 SELECT id, c, f FROM t1 ORDER BY c, f;
+
+--source include/villagesql/decode_failure_log_init.inc
+--echo # panic from counter_decode on SELECT
+INSERT INTO t1 VALUES (5, '8686', 'true');
+--error 3219
+SELECT id, c  FROM t1 WHERE id = 5;
+
+--echo # capture counter decode error
+--source include/villagesql/decode_failure_log_print.inc
+
+UPDATE t1 SET c = '5' WHERE id =5;
+
+# TODO(villagesql-general): no error reported to client
+--echo # panic from counter_hash on SELECT
+INSERT INTO t1 VALUES (6, '666', 'true');
+SELECT sum(id), c FROM t1 GROUP BY c ORDER BY c;
+
+--echo # get copy of hash error
+--source include/villagesql/decode_failure_log_print.inc
+
 DROP TABLE t1;
+
+--echo # panic within counter_panic_default
+--error 3219
+CREATE TABLE t_panic (id INT, c counter_panic_default NOT NULL, f flag);
 
 --echo # Default values: omitted columns use the registered default
 CREATE TABLE t2 (id INT, c counter, f flag);
@@ -146,4 +179,5 @@ SELECT tvector::resolve_params('dimension=abc');
 --error ER_UDF_ERROR
 SELECT tvector::resolve_params('dimension=3,type=int');
 
+--remove_file $MYSQLTEST_VARDIR/tmp/decode_fail_log_pos.txt
 UNINSTALL EXTENSION sdk_coverage;
