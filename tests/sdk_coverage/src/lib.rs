@@ -46,7 +46,9 @@ fn sdk_warn_if_negative_impl(args: &[InValue]) -> VdfReturn {
 
 pub fn counter_encode(s: &str) -> Result<Vec<u8>, String> {
     let n: i64 = s.trim().parse().map_err(|e| format!("counter: {e}"))?;
-    if n == 86 { panic!("counter_encode panic") }
+    if n == 86 {
+        panic!("counter_encode panic")
+    }
     Ok(n.to_le_bytes().to_vec())
 }
 
@@ -55,7 +57,9 @@ pub fn counter_decode(b: &[u8]) -> Result<String, String> {
         return Err(format!("counter: expected 8 bytes, got {}", b.len()));
     }
     let n: i64 = i64::from_le_bytes(b[..8].try_into().unwrap());
-    if n == 8686 { panic!("counter_decode panic") }
+    if n == 8686 {
+        panic!("counter_decode panic")
+    }
     Ok(n.to_string())
 }
 
@@ -63,7 +67,9 @@ pub fn counter_decode(b: &[u8]) -> Result<String, String> {
 pub fn counter_compare(a: &[u8], b: &[u8]) -> std::cmp::Ordering {
     let va = i64::from_le_bytes(a[..8].try_into().unwrap());
     let vb = i64::from_le_bytes(b[..8].try_into().unwrap());
-    if va == 68 { panic!("counter_compare panic") }
+    if va == 68 {
+        panic!("counter_compare panic")
+    }
     va.cmp(&vb)
 }
 
@@ -71,7 +77,9 @@ pub fn counter_compare(a: &[u8], b: &[u8]) -> std::cmp::Ordering {
 #[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
 pub fn counter_hash(b: &[u8]) -> usize {
     let va = i64::from_le_bytes(b[..8].try_into().unwrap());
-    if va == 666 { panic!("counter_hash panic") }
+    if va == 666 {
+        panic!("counter_hash panic")
+    }
     i64::from_le_bytes(b[..8].try_into().unwrap()) as usize
 }
 
@@ -109,6 +117,9 @@ pub fn flag_compare(a: &[u8], b: &[u8]) -> std::cmp::Ordering {
 
 pub fn padint_encode(s: &str, params: &mut MaybeParams<PadintParams>) -> Result<Vec<u8>, String> {
     let n: i64 = s.trim().parse().map_err(|e| format!("padint: {e}"))?;
+    if n == 86 {
+        panic!("padint_encode panic")
+    }
     if !params.is_known() {
         // Bare constant: infer width from the digit count of the literal.
         let digits = s.trim().trim_start_matches('-').len().max(1);
@@ -131,6 +142,9 @@ fn read_i64(b: &[u8]) -> Option<i64> {
 pub fn padint_decode(b: &[u8], p: &PadintParams) -> Result<String, String> {
     let n = read_i64(b).ok_or_else(|| format!("padint: expected 8 bytes, got {}", b.len()))?;
     let width = p.width as usize;
+    if n == 8686 {
+        panic!("padint_decode panic")
+    }
     Ok(format!("{n:0width$}"))
 }
 
@@ -138,6 +152,9 @@ pub fn padint_decode(b: &[u8], p: &PadintParams) -> Result<String, String> {
 pub fn padint_compare(a: &[u8], b: &[u8], _p: &PadintParams) -> std::cmp::Ordering {
     let va = read_i64(a).unwrap_or(0);
     let vb = read_i64(b).unwrap_or(0);
+    if va == 68 {
+        panic!("padint_compare panic")
+    }
     va.cmp(&vb)
 }
 
