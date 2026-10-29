@@ -162,6 +162,9 @@ pub fn padint_int_to_params(n: i64) -> Result<String, String> {
     if n < 1 {
         return Err(format!("padint: width must be >= 1, got {n}"));
     }
+    if n == 17 {
+        panic!("padint_int_to_params panic");
+    }
     Ok(format!("width={n}"))
 }
 
@@ -171,6 +174,9 @@ pub fn padint_resolve_params(params: Params) -> Result<Resolved, String> {
         .ok_or_else(|| "padint: missing 'width' param".to_string())?
         .parse()
         .map_err(|e| format!("padint: bad width: {e}"))?;
+    if width == 29 {
+        panic!("padint_resolve_params panic");
+    }
     // Storage is a fixed 8-byte i64. The decode buffer must fit the widest
     // rendering: an i64 is up to 20 characters, and zero-padding can widen it
     // to `width` characters — so take the larger of the two.
@@ -180,6 +186,9 @@ pub fn padint_resolve_params(params: Params) -> Result<Resolved, String> {
 #[must_use]
 #[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
 pub fn padint_hash(b: &[u8], _p: &PadintParams) -> usize {
+    if read_i64(b).unwrap_or(0) == 97 {
+        panic!("padint_hash panic");
+    }
     read_i64(b).unwrap_or(0) as usize
 }
 
@@ -192,6 +201,9 @@ pub fn padint_parse(params: Params) -> PadintParams {
         .get("width")
         .and_then(|s| s.parse().ok())
         .unwrap_or(1);
+    if width == 71 {
+        panic!("padint_parse panic")
+    }
     PadintParams { width }
 }
 
@@ -226,6 +238,9 @@ pub fn tvector_to_strings(p: &TvectorParams) -> Vec<(String, String)> {
     } else {
         "float"
     };
+    if p.dimension == 11 {
+        panic!("tvector_to_strings")
+    }
     vec![
         ("dimension".to_string(), p.dimension.to_string()),
         ("type".to_string(), ty.to_string()),
@@ -361,6 +376,9 @@ pub fn tvector_decode(bytes: &[u8], params: &TvectorParams) -> Result<String, St
 #[must_use]
 pub fn tvector_compare(a: &[u8], b: &[u8], params: &TvectorParams) -> std::cmp::Ordering {
     let dim = usize::try_from(params.dimension).unwrap_or(0);
+    if dim == 12 {
+        panic!("tvector_compare panic");
+    }
     let elem_size = params.bytes_per_elem; // bytes per number (4 = float, 8 = double)
     for i in 0..dim {
         let start = i * elem_size;
@@ -376,6 +394,9 @@ pub fn tvector_compare(a: &[u8], b: &[u8], params: &TvectorParams) -> std::cmp::
 
 pub fn tvector_default(p: &TvectorParams) -> Result<String, String> {
     let n = usize::try_from(p.dimension).unwrap_or(0);
+    if n == 13 {
+        panic!("tvector_default panic");
+    }
     Ok(format!("[{}]", vec!["0"; n].join(",")))
 }
 
