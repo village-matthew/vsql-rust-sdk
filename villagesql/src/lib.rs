@@ -1014,16 +1014,18 @@ pub unsafe fn dispatch_from_string_typed<P>(
         if input_known {
             let key = canonical_key(TypeParams { raw: input });
             maybe = MaybeParams::present(parse(Params::parse(&key)));
-       }
+        }
     }));
 
     match panic_result1 {
         Ok(_) => (),
         Err(_) => {
-            write_result(VdfReturn::Error("dispatch_from_string_typed".to_string()), &mut *result);
+            write_result(
+                VdfReturn::Error("dispatch_from_string_typed".to_string()),
+                &mut *result,
+            );
         }
     }
-
 
     // Run the author's encoder. When params were unknown, this is where it
     // inspects the string and fills them in via `set`. An `Err` is a bad value,
@@ -1041,8 +1043,11 @@ pub unsafe fn dispatch_from_string_typed<P>(
         match panic_result2 {
             Ok(_) => (),
             Err(_) => {
-                write_result(VdfReturn::Error("dispatch_from_string_typed".to_string()), &mut *result);
-           }
+                write_result(
+                    VdfReturn::Error("dispatch_from_string_typed".to_string()),
+                    &mut *result,
+                );
+            }
         }
     }
 
@@ -1067,7 +1072,10 @@ pub unsafe fn dispatch_from_string_typed<P>(
             match panic_result3 {
                 Ok(_) => (),
                 Err(_) => {
-                    write_result(VdfReturn::Error("dispatch_from_string_typed".to_string()), &mut *result);
+                    write_result(
+                        VdfReturn::Error("dispatch_from_string_typed".to_string()),
+                        &mut *result,
+                    );
                 }
             }
         }
@@ -1105,7 +1113,10 @@ pub unsafe fn dispatch_intrinsic_default_typed<P>(
     match panic_result {
         Ok(_) => (),
         Err(_) => {
-            write_result(VdfReturn::Error("dispatch_intrinsic_default_typed".to_string()), &mut *result);
+            write_result(
+                VdfReturn::Error("dispatch_intrinsic_default_typed".to_string()),
+                &mut *result,
+            );
         }
     }
 }
