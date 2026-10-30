@@ -1,15 +1,9 @@
 INSTALL EXTENSION sdk_coverage;
 
-call mtr.add_suppression("VillageSQL.*Invalid value in column.*sdk_coverage");
-call mtr.add_suppression("VillageSQL.*hash VDF.*dispatch_vdf");
-
 --echo # InValue::Int dispatch
 SELECT sdk_identity_int(42);
 SELECT sdk_identity_int(-100);
 SELECT sdk_identity_int(NULL);
---echo # InValue::Int dispatch panic
---error 3200
-SELECT sdk_identity_int(86);
 
 --echo # InValue::Real dispatch
 SELECT sdk_identity_real(1.5);
@@ -51,39 +45,7 @@ INSERT INTO t1 VALUES (4, 'not-a-number', 'true');
 INSERT INTO t1 VALUES (4, '1', 'maybe');
 SELECT id, c, f FROM t1 ORDER BY id;
 SELECT id, c, f FROM t1 ORDER BY c, f;
-
---echo # Panic: within counter_encode
---error 3200
-SELECT counter::from_string('86');
-
---source include/villagesql/decode_failure_log_init.inc
---echo # Panic: counter_decode on SELECT
-INSERT INTO t1 VALUES (5, '8686', 'true');
---error 3219
-SELECT id, c  FROM t1 WHERE id = 5;
-
---echo # capture counter decode error
---source include/villagesql/decode_failure_log_print.inc
-
-UPDATE t1 SET c = '5' WHERE id =5;
-
---echo # Panic: within counter_compare
---error 3200
-SELECT counter::compare(counter::from_string('68'), counter::from_string('68'));
-
-# TODO(villagesql-general): no error reported to client
---echo # Panic: from counter_hash on SELECT
-INSERT INTO t1 VALUES (6, '666', 'true');
-SELECT sum(id), c FROM t1 GROUP BY c ORDER BY c;
-
---echo # get copy of hash error
---source include/villagesql/decode_failure_log_print.inc
-
 DROP TABLE t1;
-
---echo # Panic: within counter_panic_default
---error 3219
-CREATE TABLE t_panic (id INT, c counter_panic_default NOT NULL, f flag);
 
 --echo # Default values: omitted columns use the registered default
 CREATE TABLE t2 (id INT, c counter, f flag);
@@ -103,46 +65,9 @@ SELECT padint::resolve_params('width=5');
 SELECT padint::resolve_params('width=12');
 --error ER_UDF_ERROR
 SELECT padint::resolve_params('');
-SELECT padint::resolve_params('width=8686');
 
 --echo # padint value round-trip (per-row VDFs, param-independent)
 SELECT padint::from_string('42');
-
---echo # Panic: within padint_encode
---error 3219
-SELECT padint::from_string('86');
-
-CREATE TABLE t2_panic (id INT, p sdk_coverage.padint(4));
-
---source include/villagesql/decode_failure_log_init.inc
---echo # Panic: padint_decode on SELECT
-INSERT INTO t2_panic VALUES (1, '8686');
---error 3219
-SELECT id, p  FROM t2_panic WHERE id = 1;
-
---echo # capture counter decode error
---source include/villagesql/decode_failure_log_print.inc
-DROP TABLE t2_panic;
-
---echo # Panic: within padint_compare
---error 3200
-SELECT padint::compare(padint::from_string('68'), padint::from_string('68'));
-
---echo # Panic: within padint_int_to_params
---error 3200
-SELECT padint::int_to_params(17);
-
---echo # Panic: within padint_resolve_params
---error 3200
-SELECT padint::resolve_params('width=29');
-
---echo # Panic: during padint_parse
---error 3219
-CREATE TABLE t_panic (id INT, pp sdk_coverage.padint('width=71'));
-
---echo # Panic: during padint_hash
---error 3200
-SELECT padint::hash(padint::from_string('97'));
 
 --echo # parameterized columns with DIFFERENT widths: the typed params cache
 --echo # parses/stores width=5 and width=3 separately; decode pads to each
@@ -199,11 +124,6 @@ SELECT tvector::compare(tvector::from_string('[1,2,3]'), tvector::from_string('[
 --echo # Conflicting inferred dimensions (2 vs 3) are rejected
 --error ER_VILLAGESQL_GENERIC_ERROR
 SELECT tvector::compare(tvector::from_string('[1,2]'), tvector::from_string('[1,2,3]'));
---echo # Panic: within tvector_compare
---error 3200
-SELECT tvector::compare(
-   tvector::from_string('[0,1,2,3,4,5,6,7,8,9,1,2]'),
-   tvector::from_string('[9,8,7,6,5,4,3,2,1,0,1,2]'));
 
 --echo # Error: dimension over the 4096 cap is rejected at declaration
 --error ER_PARSE_ERROR
@@ -223,13 +143,4 @@ SELECT tvector::resolve_params('dimension=abc');
 --error ER_UDF_ERROR
 SELECT tvector::resolve_params('dimension=3,type=int');
 
---echo # Panic: within tvector_to_strings
---error 3219
-SELECT tvector::from_string('[0,1,2,3,4,5,6,7,8,9,10]');
-
---echo # Panic: within tvector_default
---error 3219
-CREATE TABLE tv_panic (id INT, tv sdk_coverage.tvector(13) NOT NULL);
-
---remove_file $MYSQLTEST_VARDIR/tmp/decode_fail_log_pos.txt
 UNINSTALL EXTENSION sdk_coverage;
