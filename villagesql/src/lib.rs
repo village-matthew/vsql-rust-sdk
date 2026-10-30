@@ -834,7 +834,7 @@ pub unsafe fn dispatch_vdf(
     }));
 
     match panic_result {
-        Ok() => (),
+        Ok(_) => (),
         Err(_) => {
             write_result(VdfReturn::Error("dispatch_vdf".to_string()), &mut *result);
         }
@@ -878,7 +878,7 @@ pub unsafe fn dispatch_vdf_with_state<T>(
     }));
 
     match panic_result {
-        Ok() => (),
+        Ok(_) => (),
         Err(_) => {
             write_result(
                 VdfReturn::Error("dispatch_vdf_with_stat".to_string()),
@@ -1018,7 +1018,7 @@ pub unsafe fn dispatch_from_string_typed<P>(
     }));
 
     match panic_result1 {
-        Ok() => (),
+        Ok(_) => (),
         Err(_) => {
             write_result(
                 VdfReturn::Error("dispatch_from_string_typed".to_string()),
@@ -1041,7 +1041,7 @@ pub unsafe fn dispatch_from_string_typed<P>(
         }));
 
         match panic_result2 {
-            Ok() => (),
+            Ok(_) => (),
             Err(_) => {
                 write_result(
                     VdfReturn::Error("dispatch_from_string_typed".to_string()),
@@ -1070,7 +1070,7 @@ pub unsafe fn dispatch_from_string_typed<P>(
             }));
 
             match panic_result3 {
-                Ok() => (),
+                Ok(_) => (),
                 Err(_) => {
                     write_result(
                         VdfReturn::Error("dispatch_from_string_typed".to_string()),
@@ -1111,7 +1111,7 @@ pub unsafe fn dispatch_intrinsic_default_typed<P>(
     }));
 
     match panic_result {
-        Ok() => (),
+        Ok(_) => (),
         Err(_) => {
             write_result(
                 VdfReturn::Error("dispatch_intrinsic_default_typed".to_string()),
@@ -1144,7 +1144,7 @@ pub unsafe fn dispatch_intrinsic_default(
     }));
 
     match panic_result {
-        Ok() => (),
+        Ok(_) => (),
         Err(_) => {
             write_result(
                 VdfReturn::Error("dispatch_vdf_intrinsic_default".to_string()),
@@ -1633,7 +1633,7 @@ macro_rules! func {
                 // });
 
                 // match panic_result {
-                //     Ok() => (),
+                //     Ok(_) => (),
                 //     Err(panic_payload) => {
                 //         write_result(VdfReturn::Error(panic_payload, result));
                 //     }
