@@ -109,7 +109,7 @@ pub fn flag_compare(a: &[u8], b: &[u8]) -> std::cmp::Ordering {
 
 pub fn padint_encode(s: &str, params: &mut MaybeParams<PadintParams>) -> Result<Vec<u8>, String> {
     let n: i64 = s.trim().parse().map_err(|e| format!("padint: {e}"))?;
-    assert!(n != 86,"padint_encode panic");
+    assert!(n != 86, "padint_encode panic");
 
     if !params.is_known() {
         // Bare constant: infer width from the digit count of the literal.
